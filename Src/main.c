@@ -1249,7 +1249,7 @@ int main(void)
 			}
 			max=0;
 			Dot=0;
-			
+			MB_HZ_NOW=Dot;//clear after test
 
 			
 			Dooot=0;
