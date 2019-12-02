@@ -724,8 +724,8 @@ void MB04(void) //поменяны местами регистры
 	uint8_t max_t=0;
 	uint8_t hz_t=0;
 	
-	uint16_t rms_f=0;
-	uint16_t max_f=0;
+	float rms_f=0;
+	float max_f=0;
 
 	
 	uint32_t MB_RMS_T=0;
