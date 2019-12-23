@@ -395,8 +395,7 @@ static void MX_TIM2_Init(uint8_t bd)
 
 static void MX_TIM21_Init(void)
 {
-	TIM_MasterConfigTypeDef sMasterConfig;
-	TIM_ClockConfigTypeDef sClockSourceConfig;
+
 	
 	__HAL_RCC_TIM21_CLK_ENABLE();
   htim21.Instance = TIM21;
@@ -421,8 +420,7 @@ static void MX_TIM21_Init(void)
 
 static void MX_TIM22_Init(void)
 {
-	TIM_MasterConfigTypeDef sMasterConfig;
-	TIM_ClockConfigTypeDef sClockSourceConfig;
+
 	
 	__HAL_RCC_TIM22_CLK_ENABLE();
   htim22.Instance = TIM22;
@@ -716,13 +714,7 @@ uint8_t notmore100(uint32_t data, uint32_t prev_data)
 
 void MB04(void) //поменяны местами регистры
 {
-	uint8_t rms_st=0;
-	uint8_t max_st=0;
 
-	
-	uint8_t rms_t=0;
-	uint8_t max_t=0;
-	uint8_t hz_t=0;
 	
 	float rms_f=0;
 	float max_f=0;
@@ -1031,7 +1023,7 @@ int main(void)
 	FBI[7]=FLASH_Read(FlAdr+28);
 	FBI[8]=FLASH_Read(FlAdr+32);
 	
-	MB_ADR=FBI[0]>>16;
+	MB_ADR=(uint8_t)FBI[0]>>16;
 	MB_SPEED=FBI[0]&0x0000FFFF;
 	
 	MB_RMS_N_I=FBI[1]>>16;
@@ -1073,8 +1065,9 @@ int main(void)
 	
 	
 	//MX_TIM21_Init();
+	if(MB_SPEED>8){MB_SPEED=2;}
 	USART2_ReInit(MB_SPEED);
-  MX_TIM2_Init(MB_SPEED);
+	MX_TIM2_Init(MB_SPEED);
 
 
 	HAL_ADC_Start_DMA(&hadc,(uint32_t*)&adc1,3);
