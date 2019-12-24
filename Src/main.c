@@ -44,7 +44,7 @@
 
 #define MAX_HZ 1500 //~4500 - 50Hz, 1500 - 150Hz
 
-#define FlAdr (uint32_t)(0x08007F00)
+#define FlAdr (uint32_t)(0x08007D00)
 #define Lamp_5 10
 #define Lamp_2 4
 #define Lamp_1 2
@@ -251,7 +251,9 @@ uint8_t Flag=1;
 uint8_t FlagMB=1;
 uint8_t FlagMB2=1;
 
-uint32_t FBI[10];
+uint32_t FBI[3][10];
+uint32_t FB2[10];
+uint32_t FB3[10];
 uint16_t abcd[8];
 uint32_t FBI0;
 uint32_t FBI1;
@@ -622,9 +624,18 @@ void Erase_Flash(void)
 	HAL_FLASH_Lock();
 }
 
-void Write_Flash(void)
+uint32_t check_calc(uint32_t *buffer, uint32_t buff_len) {
+	uint32_t result, i;
+	result=0;
+	for(i = 0; i < buff_len; i++) {
+    result ^= buffer[i]; 
+  }
+	return result;
+}
+
+void Write_Flash_Adr(uint32_t Adr)
 {
-	uint32_t Buf[9];
+	uint32_t Buf[10];
 	uint32_t PgError = 0;
 	Buf[0]=(uint32_t)(MB_ADR*0x10000+MB_SPEED);
 	Buf[1]=(uint32_t)(MB_RMS_N_I*0x10000+MB_RMS_N_F);
@@ -636,30 +647,40 @@ void Write_Flash(void)
 	Buf[6]=(uint32_t)(MB_AMPL_ZERO*0x10000+MB_RMS_ZERO);
 	Buf[7]=(uint32_t)(MB_NAME);
 	Buf[8]=(uint32_t)(MB_ATT_OFF*0x10000+MB_ATT_ON);
+	Buf[9]=check_calc(Buf,9);
 	HAL_FLASH_Unlock();
 	
 	FLASH_EraseInitTypeDef Flash_eraseInitStruct;
 	Flash_eraseInitStruct.TypeErase     = FLASH_TYPEERASE_PAGES;
-	Flash_eraseInitStruct.PageAddress  = FlAdr;
-	Flash_eraseInitStruct.NbPages        = 2;
+	Flash_eraseInitStruct.PageAddress  = Adr;
+	Flash_eraseInitStruct.NbPages        = 1;
 
 	if(HAL_FLASHEx_Erase(&Flash_eraseInitStruct, &PgError) != HAL_OK)
 	{
 		 HAL_FLASH_Lock();
 	}
 
-	HAL_FLASH_Program(TYPEPROGRAM_WORD, FlAdr,Buf[0]);
-	HAL_FLASH_Program(TYPEPROGRAM_WORD, FlAdr+4,Buf[1]);
-	HAL_FLASH_Program(TYPEPROGRAM_WORD, FlAdr+8,Buf[2]);
-	HAL_FLASH_Program(TYPEPROGRAM_WORD, FlAdr+12,Buf[3]);
-	HAL_FLASH_Program(TYPEPROGRAM_WORD, FlAdr+16,Buf[4]);
-	HAL_FLASH_Program(TYPEPROGRAM_WORD, FlAdr+20,Buf[5]);
-	HAL_FLASH_Program(TYPEPROGRAM_WORD, FlAdr+24,Buf[6]);
-	HAL_FLASH_Program(TYPEPROGRAM_WORD, FlAdr+28,Buf[7]);
-	HAL_FLASH_Program(TYPEPROGRAM_WORD, FlAdr+32,Buf[8]);
+	HAL_FLASH_Program(TYPEPROGRAM_WORD, Adr,Buf[0]);
+	HAL_FLASH_Program(TYPEPROGRAM_WORD, Adr+4,Buf[1]);
+	HAL_FLASH_Program(TYPEPROGRAM_WORD, Adr+8,Buf[2]);
+	HAL_FLASH_Program(TYPEPROGRAM_WORD, Adr+12,Buf[3]);
+	HAL_FLASH_Program(TYPEPROGRAM_WORD, Adr+16,Buf[4]);
+	HAL_FLASH_Program(TYPEPROGRAM_WORD, Adr+20,Buf[5]);
+	HAL_FLASH_Program(TYPEPROGRAM_WORD, Adr+24,Buf[6]);
+	HAL_FLASH_Program(TYPEPROGRAM_WORD, Adr+28,Buf[7]);
+	HAL_FLASH_Program(TYPEPROGRAM_WORD, Adr+32,Buf[8]);
+	HAL_FLASH_Program(TYPEPROGRAM_WORD, Adr+36,Buf[9]);
 
 	HAL_FLASH_Lock();
 }
+
+void Write_Flash(void)
+{
+	Write_Flash_Adr(FlAdr);
+	Write_Flash_Adr(FlAdr+0x100);
+	Write_Flash_Adr(FlAdr+0x200);
+}
+
 
 uint32_t FLASH_Read(uint32_t address)
 {
@@ -1007,45 +1028,76 @@ int main(void)
 	MB_ATT_ON=0x0FA0;
 	MB_ATT_OFF=0x00FA;
 	
-	FBI[0]=FLASH_Read(FlAdr);
+	FBI[0][0]=FLASH_Read(FlAdr);
+	uint8_t k, rightData;
 	
-	if((FBI[0]==0)||(FBI[0]==0xFFFFFFFF))
+	
+	if((FBI[0][0]==0)||(FBI[0][0]==0xFFFFFFFF))
 	{
+		rightData=4; //wrong data - need write default
 		Write_Flash();
 	}
-	FBI[0]=FLASH_Read(FlAdr);
-	FBI[1]=FLASH_Read(FlAdr+4);
-	FBI[2]=FLASH_Read(FlAdr+8);
-	FBI[3]=FLASH_Read(FlAdr+12);
-	FBI[4]=FLASH_Read(FlAdr+16);
-	FBI[5]=FLASH_Read(FlAdr+20);
-	FBI[6]=FLASH_Read(FlAdr+24);
-	FBI[7]=FLASH_Read(FlAdr+28);
-	FBI[8]=FLASH_Read(FlAdr+32);
-	
-	MB_ADR=(uint8_t)FBI[0]>>16;
-	MB_SPEED=FBI[0]&0x0000FFFF;
-	
-	MB_RMS_N_I=FBI[1]>>16;
-	MB_RMS_N_F=FBI[1]&0x0000FFFF;
-	
-	MB_RMS_O_I=FBI[2]>>16;
-	MB_RMS_O_F=FBI[2]&0x0000FFFF;
-	
-	MB_AMPL_ZERO=FBI[6]>>16;
-	MB_RMS_ZERO=FBI[6]&0x0000FFFF;
-	
-	MB_HZ_I=FBI[3]>>16;
-	MB_HZ_F=FBI[3]&0x0000FFFF;
-	
-	MB_AMPL_N_I=FBI[4]>>16;
-	MB_AMPL_N_F=FBI[4]&0x0000FFFF;
-	
-	MB_AMPL_O_I=FBI[5]>>16;
-	MB_AMPL_O_F=FBI[5]&0x0000FFFF;
-	
-	MB_NAME=FBI[7]&0x0000FFFF;
-	
+	else 
+	{
+		for(k=0;k<10;k++)
+		{
+			FBI[0][k]=FLASH_Read(FlAdr + k*4);
+			FBI[1][k]=FLASH_Read(FlAdr + 0x100 + k*4);
+			FBI[2][k]=FLASH_Read(FlAdr + 0x200 + k*4);
+		}
+		
+		uint32_t crc32[3];
+		for(k=0;k<3;k++)
+		{
+			crc32[k]=check_calc(FBI[k],9);
+		}
+		if (crc32[0]==FBI[0][9] && crc32[1]==FBI[1][9])
+		{
+			rightData=0;
+		}
+		else if (crc32[0]==FBI[0][9] && crc32[2]==FBI[2][9])
+		{
+			rightData=0;
+		}
+		else if (crc32[1]==FBI[1][9] && crc32[2]==FBI[2][9])
+		{
+			rightData=1;
+		}
+		else
+		{
+			rightData=4; //wrong data - need write default
+			Write_Flash();		
+		}
+	}
+		
+	if(rightData<3)
+	{
+		MB_ADR=(uint8_t)(FBI[rightData][0]>>16);
+		MB_SPEED=FBI[rightData][0]&0x0000FFFF;
+		
+		MB_RMS_N_I=FBI[rightData][1]>>16;
+		MB_RMS_N_F=FBI[rightData][1]&0x0000FFFF;
+		
+		MB_RMS_O_I=FBI[rightData][2]>>16;
+		MB_RMS_O_F=FBI[rightData][2]&0x0000FFFF;
+		
+		MB_AMPL_ZERO=FBI[rightData][6]>>16;
+		MB_RMS_ZERO=FBI[rightData][6]&0x0000FFFF;
+		
+		MB_HZ_I=FBI[rightData][3]>>16;
+		MB_HZ_F=FBI[rightData][3]&0x0000FFFF;
+		
+		MB_AMPL_N_I=FBI[rightData][4]>>16;
+		MB_AMPL_N_F=FBI[rightData][4]&0x0000FFFF;
+		
+		MB_AMPL_O_I=FBI[rightData][5]>>16;
+		MB_AMPL_O_F=FBI[rightData][5]&0x0000FFFF;
+		
+		MB_NAME=FBI[rightData][7]&0x0000FFFF;
+		
+		MB_ATT_OFF=FBI[rightData][8]>>16;
+		MB_ATT_ON=FBI[rightData][8]&0x0000FFFF;
+	}
 	
 	if(MB_HZ_I==0)
 	{
@@ -1076,15 +1128,8 @@ int main(void)
 
 	HAL_NVIC_EnableIRQ(RTC_IRQn); 
 
-	/*if (HAL_RTCEx_SetWakeUpTimer(&hrtc, 36585, RTC_WAKEUPCLOCK_RTCCLK_DIV16) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }*/
-	//lamp_double=1;
 	lamp=2;
-	//HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 0x04C3, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
-	//HAL_GPIO_WritePin(GPIOC,GPIO_PIN_14,GPIO_PIN_SET);
-	//MBPause=reg_MB[17]*120;
+
 	MBPause=1200;
 	lamp_err=0;
 	LampSetA(lamp_err);
@@ -1580,6 +1625,8 @@ void TIM2_IRQHandler(void)
 
 	uint16_t ind,dt;
 	
+	uint8_t needFlashWrite=0;
+	
 	uint8_t snd_cnt=0;
 	int i;
 	if (res_buffer[0]==MB_ADR||res_buffer[0]==247)
@@ -1713,7 +1760,8 @@ void TIM2_IRQHandler(void)
 							//MX_TIM2_Init(dt);
 						}
 						reg_MB[ind]=dt;	
-						Write_Flash();
+						needFlashWrite=1;
+						//Write_Flash();
 		  		}
 					else if(res_buffer[0]==247&&(((res_buffer[2]*0x100+res_buffer[3]>3)&&(res_buffer[2]*0x100+res_buffer[3]<21))||
 						(res_buffer[2]*0x100+res_buffer[3]==0)))
@@ -1760,8 +1808,8 @@ void TIM2_IRQHandler(void)
 						write_buffer[4]=res_buffer[4];
 						write_buffer[5]=res_buffer[5];
 						snd_cnt=6;
-					
-						Write_Flash();
+						needFlashWrite=1;
+						//Write_Flash();
 						
 
 						
@@ -1848,7 +1896,8 @@ void TIM2_IRQHandler(void)
 					reg_MB[res_buffer[3]]=res_buffer[7]*0x100+res_buffer[8];
 					reg_MB[res_buffer[3]+1]=res_buffer[9]*0x100+res_buffer[10];
 					snd_cnt=6;
-					Write_Flash();
+					needFlashWrite=1;
+					//Write_Flash();
 				}
 				else
 				{
@@ -1933,6 +1982,11 @@ void TIM2_IRQHandler(void)
 				NeedChangeSpeed=0;
 				USART2_ReInit(dt);
 				MX_TIM2_Init(dt);
+			}
+			if(needFlashWrite)
+			{
+				needFlashWrite=0;
+				Write_Flash();
 			}
 	  }
 
