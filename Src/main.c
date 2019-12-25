@@ -1051,15 +1051,15 @@ int main(void)
 		{
 			crc32[k]=check_calc(FBI[k],9);
 		}
-		if (crc32[0]==FBI[0][9] && crc32[1]==FBI[1][9])
+		if (crc32[0]==FBI[0][9] && crc32[1]==FBI[1][9] && FBI[0][9]==FBI[1][9])
 		{
 			rightData=0;
 		}
-		else if (crc32[0]==FBI[0][9] && crc32[2]==FBI[2][9])
+		else if (crc32[0]==FBI[0][9] && crc32[2]==FBI[2][9] && FBI[0][9]==FBI[2][9])
 		{
 			rightData=0;
 		}
-		else if (crc32[1]==FBI[1][9] && crc32[2]==FBI[2][9])
+		else if (crc32[1]==FBI[1][9] && crc32[2]==FBI[2][9] && FBI[1][9]==FBI[2][9])
 		{
 			rightData=1;
 		}
