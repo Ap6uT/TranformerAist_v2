@@ -108,8 +108,8 @@ const unsigned char auchCRCLo[] =
 };
 
 
-const uint32_t USART_const [9] = {2400,4800,9600,14400,19200,38400,56000,57600,115200};
-const uint8_t  TIMER_const [9] = {15,8,4,3,2,2,2,2,2};
+const uint32_t USART_const [9] = {9600,4800,9600,14400,19200,38400,56000,57600,115200};
+const uint8_t  TIMER_const [9] = {4,8,4,3,2,2,2,2,2};
 
 /* USER CODE END Includes */
 
