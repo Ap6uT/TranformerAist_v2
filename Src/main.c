@@ -1211,6 +1211,17 @@ int main(void)
 					Max_RMSs=now2;
 				}
 				MaxS=max;
+				
+				
+				
+				//usart reinit
+				if(MB_SPEED>8){MB_SPEED=2;}
+				USART2_ReInit(MB_SPEED);
+				MX_TIM2_Init(MB_SPEED);
+				HAL_NVIC_SetPriority(USART2_IRQn, 0, 1);
+				HAL_NVIC_EnableIRQ(USART2_IRQn);
+				__HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE);
+				
 				if(max>0x0FFE)
 				{
 					lamp_f=1;
@@ -1265,6 +1276,15 @@ int main(void)
 
 		if(Dot>30000)
 		{
+			
+			//usart reinit
+				if(MB_SPEED>8){MB_SPEED=2;}
+				USART2_ReInit(MB_SPEED);
+				MX_TIM2_Init(MB_SPEED);
+				HAL_NVIC_SetPriority(USART2_IRQn, 0, 1);
+				HAL_NVIC_EnableIRQ(USART2_IRQn);
+				__HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE);
+			
 			/*MB_RMS_NOW=now2;
 			MB_AMPL_NOW=max;
 			max=0;*/
