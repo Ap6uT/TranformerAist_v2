@@ -60,6 +60,9 @@
 #define AttPause 1
 #define AttPauseAfter 2
 
+
+#define MBReinitTime 120
+
 #define Kf 50
 
 
@@ -152,6 +155,8 @@ volatile uint8_t lamp_f=0;
 volatile uint8_t lamp_err=0;
 volatile uint8_t lamp_double=0;
 volatile uint8_t lamp_df=0;
+
+volatile uint8_t mbReinitCnt=0;
 
 
 uint16_t max=0;
@@ -1138,6 +1143,20 @@ int main(void)
   {
 
 		HAL_IWDG_Refresh(&hiwdg);
+		
+		
+		if(mbReinitCnt>120)
+		{
+			mbReinitCnt=0;
+			//usart reinit
+			if(MB_SPEED>8){MB_SPEED=2;}
+			USART2_ReInit(MB_SPEED);
+			MX_TIM2_Init(MB_SPEED);
+			HAL_NVIC_SetPriority(USART2_IRQn, 0, 1);
+			HAL_NVIC_EnableIRQ(USART2_IRQn);
+			__HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE);
+		}
+		
 		My_Jump_Boatloader();
 		Dot++;
 		
@@ -1214,13 +1233,7 @@ int main(void)
 				
 				
 				
-				//usart reinit
-				if(MB_SPEED>8){MB_SPEED=2;}
-				USART2_ReInit(MB_SPEED);
-				MX_TIM2_Init(MB_SPEED);
-				HAL_NVIC_SetPriority(USART2_IRQn, 0, 1);
-				HAL_NVIC_EnableIRQ(USART2_IRQn);
-				__HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE);
+				
 				
 				if(max>0x0FFE)
 				{
@@ -1277,13 +1290,7 @@ int main(void)
 		if(Dot>30000)
 		{
 			
-			//usart reinit
-				if(MB_SPEED>8){MB_SPEED=2;}
-				USART2_ReInit(MB_SPEED);
-				MX_TIM2_Init(MB_SPEED);
-				HAL_NVIC_SetPriority(USART2_IRQn, 0, 1);
-				HAL_NVIC_EnableIRQ(USART2_IRQn);
-				__HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE);
+
 			
 			/*MB_RMS_NOW=now2;
 			MB_AMPL_NOW=max;
@@ -1652,6 +1659,8 @@ void TIM2_IRQHandler(void)
 	if (res_buffer[0]==MB_ADR||res_buffer[0]==247)
 
   {
+		
+		mbReinitCnt=0;
 		
 	  CRCCod=CRC16(res_buffer, (res_wr_index));	// Расчет СRC
 	  if (CRCCod==0)								// Проверка CRC в посылке
@@ -2093,6 +2102,9 @@ void TIM21_IRQHandler(void)
 			lamp_err|=Lmp10Min;
 		}
 	}*/
+	
+	mbReinitCnt++;
+	
 	if(FlagA90)
 	{
 		AttP++;
