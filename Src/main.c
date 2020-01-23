@@ -61,7 +61,7 @@
 #define AttPauseAfter 2
 
 
-#define MBReinitTime 120
+#define MBReinitTime 60
 
 #define Kf 50
 
@@ -167,7 +167,7 @@ uint16_t MBPauseCnt=0;
 
 uint32_t zeros=0;
 
-unsigned char res_buffer[20];					// приемный буфер
+unsigned char res_buffer[30];					// приемный буфер
 unsigned char write_buffer[80];					// буфер для передачи
 volatile unsigned char res_wr_index;
 
@@ -1631,8 +1631,10 @@ void USART2_IRQHandler(void)
 			TIM2->CNT=0;
 			res_buffer[res_wr_index]=(uint8_t)(USART2->RDR);
 			//HAL_UART_Receive(&huart2, &x, 1, 100);
-			
-			res_wr_index++;						
+			if(res_wr_index<29)
+			{
+				res_wr_index++;			
+			}
 			FlagMB=1;
 			TIM2->CR1 |= TIM_CR1_CEN; 
 	}
