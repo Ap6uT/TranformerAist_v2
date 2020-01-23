@@ -1145,7 +1145,7 @@ int main(void)
 		HAL_IWDG_Refresh(&hiwdg);
 		
 		
-		if(mbReinitCnt>120)
+		if(mbReinitCnt>MBReinitTime)
 		{
 			mbReinitCnt=0;
 			//usart reinit
