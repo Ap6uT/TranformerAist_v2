@@ -27,7 +27,14 @@ Project File Date:  03/02/2020
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 3 (build 300)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'TransformerAist'
-"TransformerAist\TransformerAist.axf" - 0 Error(s), 0 Warning(s).
+compiling main.c...
+../Src/main.c(428): warning:  #177-D: function "MX_TIM22_Init" was declared but never referenced
+  static void MX_TIM22_Init(void)
+../Src/main.c: 1 warning, 0 errors
+linking...
+Program Size: Code=17896 RO-data=948 RW-data=112 ZI-data=1880  
+FromELF: creating hex file...
+"TransformerAist\TransformerAist.axf" - 0 Error(s), 1 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -50,7 +57,7 @@ Package Vendor: Keil
 <h2>Collection of Component Files used:</h2>
 
    * Component: ARM::CMSIS:CORE:5.1.2
-Build Time Elapsed:  00:00:01
+Build Time Elapsed:  00:00:02
 </pre>
 </body>
 </html>

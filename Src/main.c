@@ -1637,6 +1637,8 @@ void USART2_IRQHandler(void)
 			{
 				res_buffer[res_wr_index]=buf;
 				res_wr_index++;	
+				FlagMB=1;
+				TIM2->CR1 |= TIM_CR1_CEN; 
 			}
 		}
 		else
@@ -1645,10 +1647,11 @@ void USART2_IRQHandler(void)
 			if(res_wr_index<29)
 			{
 				res_wr_index++;						
-			}	
-		}
+			}
 			FlagMB=1;
-			TIM2->CR1 |= TIM_CR1_CEN; 
+			TIM2->CR1 |= TIM_CR1_CEN; 			
+		}
+			
 	}
 	HAL_UART_IRQHandler(&huart2);
 }
