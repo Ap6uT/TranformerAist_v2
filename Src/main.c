@@ -112,7 +112,8 @@ const unsigned char auchCRCLo[] =
 
 
 const uint32_t USART_const [9] = {9600,4800,9600,14400,19200,38400,56000,57600,115200};
-const uint8_t  TIMER_const [9] = {4,8,4,3,2,2,2,2,2};
+//const uint8_t  TIMER_const [9] = {4,8,4,3,2,2,2,2,2};
+const uint8_t  TIMER_const [9] = {37,73,37,25,19,10,7,7,4};
 
 /* USER CODE END Includes */
 
@@ -256,6 +257,8 @@ uint8_t Flag=1;
 uint8_t FlagMB=1;
 uint8_t FlagMB2=1;
 
+volatile uint8_t FlagIgnoreMB=0;
+
 uint32_t FBI[3][10];
 uint32_t FB2[10];
 uint32_t FB3[10];
@@ -381,7 +384,7 @@ static void MX_TIM2_Init(uint8_t bd)
 {
 	__HAL_RCC_TIM2_CLK_ENABLE();
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 32000-1;
+  htim2.Init.Prescaler = 3200-1;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = TIMER_const[bd];
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -391,11 +394,11 @@ static void MX_TIM2_Init(uint8_t bd)
   }
 	
 	
-	TIM2->PSC = 32000 - 1; 
+	TIM2->PSC = 3200 - 1; 
 	TIM2->ARR = TIMER_const[bd]; 
 	TIM2->DIER |= TIM_DIER_UIE; 
 	TIM2->CR1 |= TIM_CR1_OPM;
-	//TIM14->CR1 |= TIM_CR1_CEN; 
+
 	NVIC_SetPriority(TIM2_IRQn, 0); 
 	NVIC_EnableIRQ(TIM2_IRQn);
 }
@@ -441,7 +444,7 @@ static void MX_TIM22_Init(void)
   }
 	
 	TIM22->PSC = 32 - 1; 
-	TIM22->ARR = 100000 ; 
+	TIM22->ARR = 10000 ; 
 	TIM22->DIER |= TIM_DIER_UIE; 
 	//TIM22->CR1 |= TIM_CR1_OPM;
 	TIM22->CR1 |= TIM_CR1_CEN; 
@@ -1627,31 +1630,16 @@ void USART2_IRQHandler(void)
 	if((USART2->ISR & USART_ISR_RXNE) == USART_ISR_RXNE)
 	{	
 		
-		TIM2->CR1 &= (uint16_t)(~((uint16_t)TIM_CR1_CEN));
-		TIM2->CNT=0;
-		uint8_t buf = 0;
-		buf =(uint8_t)(USART2->RDR);
-		if(res_wr_index==0)
-		{
-			if (buf==MB_ADR||buf==247)
-			{
-				res_buffer[res_wr_index]=buf;
-				res_wr_index++;	
-				FlagMB=1;
-				TIM2->CR1 |= TIM_CR1_CEN; 
-			}
-		}
-		else
-		{
-			res_buffer[res_wr_index]=buf;
+			TIM2->CR1 &= (uint16_t)(~((uint16_t)TIM_CR1_CEN));
+			TIM2->CNT=0;
+			res_buffer[res_wr_index]=(uint8_t)(USART2->RDR);
+			//HAL_UART_Receive(&huart2, &x, 1, 100);
 			if(res_wr_index<29)
 			{
-				res_wr_index++;						
+				res_wr_index++;			
 			}
 			FlagMB=1;
-			TIM2->CR1 |= TIM_CR1_CEN; 			
-		}
-			
+			TIM2->CR1 |= TIM_CR1_CEN; 
 	}
 	HAL_UART_IRQHandler(&huart2);
 }
